@@ -153,6 +153,15 @@ pub const BufferedWriter = struct {
         return try self.writer.write(bytes);
     }
 
+    // Formatted printing with optional buffering
+    pub fn print(self: *Self, comptime format: []const u8, args: anytype) !usize {
+        if (self.is_buffering_enabled) {
+            return try self.printBuffered(format, args);
+        } else {
+            return try self.printImmediate(format, args);
+        }
+    }
+
     // Handles buffered formatted printing
     fn printBuffered(self: *Self, comptime format: []const u8, args: anytype) !usize {
         return self.formatAndWrite(format, args, true);
