@@ -75,6 +75,10 @@ pub const Draw = struct {
         };
     }
 
+    pub fn deinit(self: *Self) void {
+        self.writer.deinit();
+    }
+
     pub fn drawVerticalLine(self: *Self, config: VerticalLineConfig) !void {
         if (config.length == 0) return;
 
