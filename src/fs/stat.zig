@@ -12,7 +12,7 @@ const libc = @cImport({
 const is_linux = builtin.os.tag == .linux;
 const is_intel_mac = builtin.os.tag == .macos and builtin.cpu.arch == .x86_64;
 
-const timeType = enum { modified, changed, accessed };
+pub const timeType = enum { modified, changed, accessed };
 
 pub const Stat = struct {
     mode: i64,
