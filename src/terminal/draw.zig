@@ -77,6 +77,7 @@ pub const Draw = struct {
 
     pub fn deinit(self: *Self) void {
         self.writer.deinit();
+        self.allocator.destroy(self.writer);
     }
 
     pub fn drawVerticalLine(self: *Self, config: VerticalLineConfig) !void {
