@@ -3,10 +3,12 @@ const app = @import("../app/index.zig");
 const owner = @import("../fs/ownerLookup.zig");
 const Entry = @import("../fs/fsIterator.zig").Entry;
 const ViewManager = @import("../view/viewManager.zig").ViewManager;
+const iconManager = @import("../app/ui/iconManager.zig");
 const Draw = @import("../terminal/draw.zig").Draw;
 const terminal_styles = @import("../terminal/styles.zig");
 const stat = @import("../fs/stat.zig");
 const fmt = @import("../view/fmt.zig");
+const icons = @import("../app/ui/icons.zig").icons;
 
 const string_utils = @import("../utils/string.zig");
 
@@ -226,7 +228,7 @@ const Tree = struct {
 
         // 2. Display File icon if enabled
         if (self.display_config.show_icons) {
-            const icon = try getIcon(file_entry);
+            const icon = try iconManager.getIcon(file_entry);
             const file_color = try getFileColor(file_entry, false);
 
             try display.printString(icon, .{ .fg = file_color });
@@ -270,7 +272,7 @@ const Tree = struct {
 
             // Display arrow symbol and link target
             const arrow = if (self.display_config.show_icons)
-                "" ++ arrow_right ++ ""
+                "" ++ icons.arrow_right ++ ""
             else
                 " -> ";
 
