@@ -4,6 +4,7 @@ const owner = @import("../fs/ownerLookup.zig");
 const Entry = @import("../fs/fsIterator.zig").Entry;
 const ViewManager = @import("../view/viewManager.zig").ViewManager;
 const Draw = @import("../terminal/draw.zig").Draw;
+const terminal_styles = @import("../terminal/styles.zig");
 const stat = @import("../fs/stat.zig");
 const fmt = @import("../view/fmt.zig");
 
@@ -81,10 +82,10 @@ const Tree = struct {
         self.tree_structure.deinit();
         self.allocator.destroy(self.tree_structure);
 
-        self.group_names.deinit();
+        owner.deinitUserMap(self.group_names);
         self.allocator.destroy(self.group_names);
 
-        self.user_names.deinit();
+        owner.deinitUserMap(self.user_names);
         self.allocator.destroy(self.user_names);
     }
 
@@ -211,14 +212,40 @@ const Tree = struct {
 
             if (self.display_config.show_group) {
                 const file_stat = try file_entry.item.getStat();
-                const group_name = string_utils.rightPadding(try file_stat.getGroupname(self.user_names), metadata_widths.group_width + 1, ' ', &self.output_buffer);
+                const group_name = string_utils.rightPadding(try file_stat.getGroupname(self.group_names), metadata_widths.group_width + 1, ' ', &self.output_buffer);
                 try display.printString(group_name, .{ .fg = .green });
             }
         }
     }
 
     // Displays the tree structure, file name, and additional file information
-    fn displayTreeAndFileName(self: *Self, file_entry: *Entry, view: *const ViewManager, display: *Draw) !void {}
+    fn displayTreeAndFileName(self: *Self, file_entry: *Entry, file_index: usize, view: *const ViewManager, display: *Draw) !void {
+        // 1. Display Branch Tree structure
+        const branch_chars = self.generateBranchConnector(file_entry, &self.output_buffer);
+        try display.printString(branch_chars, .{ .faint = true });
+
+        // 2. Display File icon if enabled
+        if (self.display_config.show_icons) {
+            const icon = try getIcon(file_entry);
+            const file_color = try getFileColor(file_entry, false);
+
+            try display.printString(icon, .{ .fg = file_color });
+            try display.printString(" ", .{ .no_style = true });
+        }
+
+        // 3. Display Filename with appropriate formatting
+        try displayFilename(file_entry, file_index, view, display);
+
+        // 4. Display symlink target if applicable
+        try self.displaySymLinkIfPresent(file_entry, display);
+
+        // 5. Display cursor indicator if this is selected file
+        if (view.cursor_pos == file_index) {
+            try display.printString(" <", .{ .bold = true, .fg = .magenta });
+        }
+
+        try display.printString(" ", .{ .no_style = true });
+    }
 
     // Gets the type of timestamp to display
     fn getTimeDisplayType(self: *Self) ?stat.timeType {
@@ -227,5 +254,111 @@ const Tree = struct {
         }
 
         return if (self.display_config.show_modified) .modified else if (self.display_config.show_accessed) .accessed else if (self.display_config.show_changed) .changed else .modified;
+    }
+
+    // Displays the File name
+    fn displayFilename(file_entry: *Entry, file_index: usize, view: *const ViewManager, display: *Draw) !void {
+        const file_name = file_entry.item.getBasename();
+        const file_color = try getFileColor(file_entry, view.cursor_pos == file_index);
+        try display.printString(file_name, .{ .fg = file_color, .underline = file_entry.selected });
+    }
+
+    // Displays symlink target if file is a symbolic link
+    fn displaySymLinkIfPresent(self: *Self, file_entry: *Entry, display: *Draw) !void {
+        if (self.display_config.show_symlinks and file_entry.item.isLink()) {
+            const link_target = try std.posix.readlink(file_entry.item.getAbsolutePath(), &self.output_buffer);
+
+            // Display arrow symbol and link target
+            const arrow = if (self.display_config.show_icons)
+                "" ++ arrow_right ++ ""
+            else
+                " -> ";
+
+            try display.printString(arrow, .{ .no_style = true });
+            try display.printString(link_target, .{ .fg = .red });
+        }
+    }
+
+    // Determine the appropriate color for a file based on its type
+    fn getFileColor(file_entry: *Entry, is_selected: bool) !terminal_styles.Color {
+        if (is_selected) return .magenta;
+
+        const file_stat = try file_entry.item.getStat();
+
+        if (file_stat.isDir()) return .blue;
+        if (file_stat.isLinkFile()) return .cyan;
+        if (file_stat.isExecutable()) return .green;
+        if (file_stat.isCharSpecialFile()) return .yellow;
+        if (file_stat.isBlockFile()) return .yellow;
+
+        return .default;
+    }
+
+    // Prints Multiple lines of the tree view handling cursor positioning.
+    pub fn printLines(self: *Self, view: *ViewManager, display: *Draw, start_row: usize, is_command_mode: bool) !void {
+        // Reset tree structure for new rendering pass
+        self.resetTreeStructure();
+        // Position cursor at start of display area
+        try display.moveCursor(start_row, 0);
+
+        // Calculate maximum lengths for user/group names if needed
+        var metadata_widths = MetadataWidths{ .group_width = 0, .user_width = 0 };
+        if (self.display_config.show_metadata and (self.display_config.show_group or self.display_config.show_user)) {
+            try self.calculateMetadataWidths(view, &metadata_widths);
+        }
+
+        // Process each item in the view buffer
+        for (0..(view.viewport_end + 1)) |current_index| {
+            const file_entry = view.buffer.items[current_index];
+
+            // Update tree structure for current entry
+            try self.updateTreeStructure(file_entry);
+
+            if (current_index > view.viewport_end) {
+                break;
+            }
+
+            if (current_index < view.viewport_start) {
+                continue;
+            }
+
+            // Check if this is the last item during command mode
+            const is_last_item = is_command_mode and view.viewport_end == current_index;
+
+            // Always render during refresh
+            if (view.needs_full_redraw) {
+                try self.displayFileLine(current_index, view, display);
+
+                // Special handling for last item in command mode. This ensures the last item is properly rendered before showing the command prompt.
+                // The cursor needs to be positioned correctly after the last item.
+            } else if (current_index == view.cursor_pos or current_index == view.previous_cursor or is_last_item) {
+                // Move cursor to correct position for these lines
+                const row = start_row + (current_index - view.viewport_start);
+                try display.moveCursor(row, 0);
+                try self.displayFileLine(current_index, view, display);
+            }
+        }
+
+        // Reset full refresh flag
+        view.needs_full_redraw = false;
+    }
+
+    // Calculates maximum widths needed for user and group names
+    fn calculateMetadataWidths(self: *Self, view: *ViewManager, widths: *MetadataWidths) !void {
+        // Iterate through visible items to find longest names
+        for (view.viewport_start..view.viewport_end + 1) |i| {
+            const file_entry = view.buffer.items[i];
+            const file_stat = try file_entry.item.getStat();
+
+            if (self.display_config.show_group) {
+                const group_name = try file_stat.getGroupname(self.group_names);
+                widths.group_width = @max(widths.group_width, group_name.len);
+            }
+
+            if (self.display_config.show_user) {
+                const user_name = try file_stat.getUsername(self.user_names);
+                widths.user_width = @max(widths.user_width, user_name.len);
+            }
+        }
     }
 };

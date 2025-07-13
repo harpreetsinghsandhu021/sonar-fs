@@ -8,6 +8,7 @@ pub const Entry = struct {
     depth: usize, // How deep the item is in the tree
     first: bool, // Whether this is the first child in its parent's children
     last: bool, // Whether this is the last child in its parent's children
+    selected: bool = false,
 };
 
 const EntryList = std.ArrayList(*Entry);
