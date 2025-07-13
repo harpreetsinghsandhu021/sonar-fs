@@ -3,6 +3,8 @@ const builtin = @import("builtin");
 const fs = std.fs;
 const linux = std.os.linux;
 
+const owner = @import("./ownerLookup.zig");
+
 const libc = @cImport({
     @cInclude("sys/stat.h");
     @cInclude("grp.h");
@@ -174,5 +176,14 @@ pub const Stat = struct {
     pub fn hasOtherReadPermission(self: *Self) bool {
         const mask = if (is_linux) linux.S.IROTH else libc.S_IROTH;
         return (mask & self.mode) > 0;
+    }
+
+    // Get Group and User names from gid and uid
+    pub fn getUsername(self: *Self, map: owner.UserMap) ![]u8 {
+        return try owner.getIdName(self.uid, map, .user);
+    }
+
+    pub fn getGroupname(self: *Self, map: owner.UserMap) ![]u8 {
+        return try owner.getIdName(self.gid, map, .group);
     }
 };

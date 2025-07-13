@@ -4,6 +4,10 @@ const owner = @import("../fs/ownerLookup.zig");
 const Entry = @import("../fs/fsIterator.zig").Entry;
 const ViewManager = @import("../view/viewManager.zig").ViewManager;
 const Draw = @import("../terminal/draw.zig").Draw;
+const stat = @import("../fs/stat.zig");
+const fmt = @import("../view/fmt.zig");
+
+const string_utils = @import("../utils/string.zig");
 
 const Allocator = std.mem.Allocator;
 const IndentList = std.ArrayList(bool);
@@ -21,6 +25,12 @@ const DisplayInfo = struct {
     show_group: bool = false, // Show group ownership
     show_user: bool = false, // Show user ownership
     show_metadata: bool = true, // Master toggle for all metadata
+};
+
+// Holds maximum widths for metadata fields
+const MetadataWidths = struct {
+    group_width: usize,
+    user_width: usize,
 };
 
 // Tree is responsible for formatting values to output strings.
@@ -143,5 +153,79 @@ const Tree = struct {
         return buffer[0..total_length];
     }
 
-    // fn displayFileLine(self: *Self, file_index: usize, view: *const ViewManager, draw: *Draw){}
+    fn displayFileLine(self: *Self, file_index: usize, view: *const ViewManager, display: *Draw) !void {
+        // Clear existing line content
+        try display.clearLine();
+
+        var file_entry = view.buffer.items[file_index];
+
+        // Check if we should show metadata (permissions, size, etc.)
+        const show_prefix_info = self.display_config.show_metadata and
+            (self.display_config.show_permissions or
+                self.display_config.show_size or
+                self.display_config.show_user or
+                self.display_config.show_group or
+                self.display_config.show_timestamp);
+
+        // Display File permissions if enabled
+        if (self.display_config.show_metadata and self.display_config.show_permissions) {
+            const file_stat = try file_entry.item.getStat();
+            const permission_string = try fmt.mode(file_stat, &self.output_buffer);
+            try display.printString(permission_string, .{ .no_style = true });
+        }
+
+        // Display File size if enabled
+        if (self.display_config.show_metadata and self.display_config.show_size) {
+            const file_stat = try file_entry.item.getStat();
+            const size_string = try fmt.size(file_stat, &self.output_buffer);
+            try display.printString(size_string, .{ .fg = .cyan });
+        }
+
+        // Display ownership information
+        try self.displayOwnershipInfo(file_entry, display, MetadataWidths);
+
+        // Show timstamp if enabled
+        if (self.getTimeDisplayType()) |time_type| {
+            const file_stat = try file_entry.item.getStat();
+            const time_string = fmt.time(file_stat, time_type, &self.output_buffer);
+            try display.printString(time_string, .{ .fg = .yellow });
+        }
+
+        // Add spacing after metadata if present
+        if (show_prefix_info) {
+            try display.printString(" ", .{ .no_style = true });
+        }
+
+        // Display tree structure and file name
+        try self.displayTreeAndFileName(file_entry, file_index, view, display);
+    }
+
+    // Displays user and group ownership information
+    fn displayOwnershipInfo(self: *Self, file_entry: *Entry, display: *Draw, metadata_widths: *const MetadataWidths) !void {
+        if (self.display_config.show_metadata) {
+            if (self.display_config.show_user) {
+                const file_stat = try file_entry.item.getStat();
+                const user_name = string_utils.rightPadding(try file_stat.getUsername(self.user_names), metadata_widths.user_width + 1, ' ', &self.output_buffer);
+                try display.printString(user_name, .{ .fg = .blue });
+            }
+
+            if (self.display_config.show_group) {
+                const file_stat = try file_entry.item.getStat();
+                const group_name = string_utils.rightPadding(try file_stat.getGroupname(self.user_names), metadata_widths.group_width + 1, ' ', &self.output_buffer);
+                try display.printString(group_name, .{ .fg = .green });
+            }
+        }
+    }
+
+    // Displays the tree structure, file name, and additional file information
+    fn displayTreeAndFileName(self: *Self, file_entry: *Entry, view: *const ViewManager, display: *Draw) !void {}
+
+    // Gets the type of timestamp to display
+    fn getTimeDisplayType(self: *Self) ?stat.timeType {
+        if (!self.display_config.show_metadata or !self.display_config.show_timestamp) {
+            return null;
+        }
+
+        return if (self.display_config.show_modified) .modified else if (self.display_config.show_accessed) .accessed else if (self.display_config.show_changed) .changed else .modified;
+    }
 };

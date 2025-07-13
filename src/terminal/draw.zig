@@ -184,7 +184,7 @@ pub const Draw = struct {
 
     // Prints a string at a specified position on the terminal. This method allows for optional styling of the string.
     // @returns error if the write operation fails.
-    pub fn printString(self: *Self, str: []const u8, config: StringConfig) !void {
+    pub fn printString(self: *Self, str: []const u8, config: styles.StyleConfig) !void {
         if (config.style_sequence.len > 0) {
             _ = try self.writer.print("\x1b[{d};{d}H{s}{s}\x1b[m", .{ config.row, config.column, config.style_sequence, str });
         } else {
