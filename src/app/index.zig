@@ -11,4 +11,5 @@ pub const Config = struct {
     time_type: stat.timeType = .modified,
     user: bool = true,
     group: bool = true,
+    use_fullscreen: bool = false,
 };
