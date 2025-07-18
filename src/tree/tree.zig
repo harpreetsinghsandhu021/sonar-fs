@@ -38,7 +38,7 @@ const MetadataWidths = struct {
 
 // Tree is responsible for formatting values to output strings.
 // It handles the visual representation of a file system structure.
-const Tree = struct {
+pub const Tree = struct {
     output_buffer: [2048]u8, // output buffer for content
     style_buffer: [2048]u8, // Buffer for styling information
     allocator: Allocator,
