@@ -1,3 +1,9 @@
+pub const SearchQuery = struct {
+    fuzzy_search: bool,
+    ignore_case: bool,
+    query: []const u8,
+};
+
 // Left-pads a given string with specific characters.
 //
 // @param str: The input string to be padded

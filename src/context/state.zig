@@ -13,6 +13,8 @@ const AppAction = @import("../app/display/input.zig").AppAction;
 const Manager = @import("../fs/fsManager.zig").Manager;
 const Config = @import("../app/index.zig").Config;
 const Iterator = @import("../fs/fsIterator.zig").Iterator;
+const Entry = @import("../fs/fsIterator.zig").Entry;
+const Item = @import("../fs/fileDir.zig").FileDir;
 
 display_viewport: *Viewport,
 view: *ViewManager,
@@ -243,4 +245,79 @@ pub fn printContents(self: *Self) !void {
 
 pub fn getAppAction(self: *Self) !AppAction {
     return try self.user_input.getNextAction();
+}
+
+// This Function finds the index of a specific file.
+pub fn getItemIndex(self: *Self, target_file_item: *Item) !usize {
+    // Search through our entire display buffer
+    // We have to check every entry because items are'nt sorted by memory address
+    for (0..self.view.buffer.items.len) |buffer_index| {
+        if (self.view.buffer.items[buffer_index].item != target_file_item) {
+            continue;
+        }
+
+        return buffer_index;
+    }
+
+    return error.NotFound;
+}
+
+// This Function attempts to retrieve the next entry from iterator and append it to the view buffer.
+pub fn appendOne(self: *Self) !bool {
+    if (self.iterator == null) {
+        return false;
+    }
+
+    const entry = try self.iterator.?.next();
+    if (entry == null) {
+        return false;
+    }
+
+    try self.view.buffer.append(entry);
+
+    return true;
+}
+
+// This Function attempts the append the next entry to the view buffer upto the specified index.
+pub fn appendUntil(self: *Self, new_len: usize) !bool {
+    while (true) {
+        if (self.view.buffer.items.len >= new_len) {
+            break;
+        }
+
+        if (!(try self.appendOne())) {
+            return false;
+        }
+    }
+
+    return self.view.buffer.items.len >= new_len;
+}
+
+// This Function gets the actual file/directory that the cursor is pointing to.
+pub fn getItemUnderCursor(self: *Self) *Item {
+    return self.getEntryUnderCursor().item;
+}
+
+// This Function gets the file entry that the cursor is currently pointing to.
+// This assumes the cursor is always at a valid position.
+pub fn getEntryUnderCursor(self: *Self) *Entry {
+    return self.view.buffer[self.view.cursor_pos];
+}
+
+// This Function gets the file entry at the given index.
+pub fn getEntry(self: *Self, index: usize) ?*Entry {
+    if (index >= self.view.buffer.items.len) {
+        return null;
+    }
+
+    return self.view.buffer.items[index];
+}
+
+// This Functions gets the actual file/directory at the given index.
+pub fn getItem(self: *Self, index: usize) ?*Item {
+    if (self.getEntry(index)) |entry| {
+        return entry.item;
+    }
+
+    return null;
 }
