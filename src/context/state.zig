@@ -15,6 +15,7 @@ const Config = @import("../app/index.zig").Config;
 const Iterator = @import("../fs/fsIterator.zig").Iterator;
 const Entry = @import("../fs/fsIterator.zig").Entry;
 const Item = @import("../fs/fileDir.zig").FileDir;
+const actions = @import("../app/display/actions.zig");
 
 display_viewport: *Viewport,
 view: *ViewManager,
@@ -237,11 +238,63 @@ pub fn printContents(self: *Self) !void {
 //
 // This is like a huge switch statement that takes user actions and executes the appropriate response.
 // It's the central hub that connect's user intent with the application behavior.
-// pub fn executeAction(self: *Self, user_action: AppAction) !void {
-//     // Cursor Position Tracking
-//     // Remember where the cursor was before this action.
-//     self.view.previous_cursor = self.view.cursor_pos;
-// }
+pub fn executeAction(self: *Self, user_action: AppAction) !void {
+    // Cursor Position Tracking
+    // Remember where the cursor was before this action.
+    self.view.previous_cursor = self.view.cursor_pos;
+
+    switch (user_action) {
+        .up => actions.moveCursorUp(self),
+        .down => actions.moveCursorDown(self),
+        .top => actions.gotoTop(self),
+        .bottom => actions.gotoBottom(self),
+        .left => try actions.navigateToParentItem(self),
+        .right => try actions.navigateToChildItem(self),
+        .enter => try actions.toggleDirectoryOrOpenFile(self),
+        .expand_all => try actions.expandAllDirectories(self),
+        .collapse_all => try actions.collapseAllDirectories(self),
+        .prev_fold => try actions.moveToPreviousSibling(self),
+        .next_fold => try actions.moveToNextSibling(self),
+        .change_root => try actions.changeRootDirectory(self),
+        .open_item => try actions.openSelectedItem(self),
+        .change_dir => try actions.outputDirectoryChangeCommand(self),
+        .depth_one => try actions.expandToSpecificDepth(self, 0),
+        .depth_two => try actions.expandToSpecificDepth(self, 1),
+        .depth_three => try actions.expandToSpecificDepth(self, 2),
+        .depth_four => try actions.expandToSpecificDepth(self, 3),
+        .depth_five => try actions.expandToSpecificDepth(self, 4),
+        .depth_six => try actions.expandToSpecificDepth(self, 5),
+        .depth_seven => try actions.expandToSpecificDepth(self, 6),
+        .depth_eight => try actions.expandToSpecificDepth(self, 7),
+        .depth_nine => try actions.expandToSpecificDepth(self, 8),
+        .toggle_info => actions.toggleInformationPanel(self),
+        .toggle_group => actions.toggleGroupDisplay(self),
+        .toggle_icons => actions.toggleIconsDisplay(self),
+        .toggle_link => actions.toggleSymbolicLinkDisplay(self),
+        .toggle_perm => actions.togglePermissionDisplay(self),
+        .toggle_size => actions.toggleSizeDisplay(self),
+        .toggle_time => actions.toggleTimeDisplay(self),
+        .toggle_user => actions.toggleUserDisplay(self),
+        .time_accessed => actions.showAccessedTime(self),
+        .time_changed => actions.showChangeTime(self),
+        .time_modified => actions.showModificationTime(self),
+        .sort_name => actions.sortFileList(self, .name, true),
+        .sort_size => actions.sortFileList(self, .size, true),
+        .sort_time => actions.sortByActiveTimestamp(self, true),
+        .sort_name_descending => actions.sortFileList(self, .name, false),
+        .sort_size_descending => actions.sortFileList(self, .size, false),
+        .sort_time_descending => actions.sortByActiveTimestamp(self, false),
+        .accept_search => actions.acceptSearchResult(self),
+        .dismiss_search => actions.dismissSearch(self),
+        .update_search => actions.executeCurrentSearch(self),
+        .start_command_mode => actions.startCommandMode(self),
+        .exec_command => actions.executeUserCommand(self),
+        .dismiss_command => actions.dismissCommand(self),
+        .select => actions.toggleSelection(self),
+        .quit => unreachable,
+        .no_action => unreachable,
+    }
+}
 
 pub fn getAppAction(self: *Self) !AppAction {
     return try self.user_input.getNextAction();

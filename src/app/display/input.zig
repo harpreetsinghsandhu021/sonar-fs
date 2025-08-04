@@ -72,11 +72,21 @@ pub const AppAction = enum {
     time_changed,
     time_accessed,
 
+    sort_name,
+    sort_size,
+    sort_time,
+    sort_name_descending,
+    sort_size_descending,
+    sort_time_descending,
+
     dismiss_search,
     accept_search,
     update_search,
+    start_command_mode,
     dismiss_command,
     exec_command,
+
+    select,
 
     no_action,
 };

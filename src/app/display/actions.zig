@@ -464,6 +464,11 @@ pub fn dismissCommand(state: *State) void {
     state.view.needs_full_redraw = true;
 }
 
+pub fn dismissSearch(state: *State) void {
+    state.view.cursor_pos = state.cursor_position_before_search;
+    state.view.needs_full_redraw = true;
+}
+
 // Toggles the selection state of the item currently under the cursor.
 pub fn toggleSelection(state: *State) void {
     var entry = state.getEntryUnderCursor();
