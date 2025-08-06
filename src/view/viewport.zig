@@ -40,7 +40,7 @@ pub const Viewport = struct {
     pub fn initBounds(self: *Self) !void {
         self.terminal_size = terminal.getTerminalSize();
         const cursor_position = try terminal.getCursorPosition();
-        self.viewport_start = try Self.adjustAndGetInitialStartRow(self.terminal_size, cursor_position);
+        self.viewport_start = try self.adjustAndGetInitialStartRow(self.terminal_size, cursor_position);
 
         self.updateVisibleRows();
     }
@@ -51,7 +51,7 @@ pub const Viewport = struct {
     // - Scrolling if necessary to create more space
     pub fn adjustAndGetInitialStartRow(self: *Self, size: terminal.TerminalSize, cursor_pos: terminal.CursorPosition) !u16 {
         _ = self;
-        const minimum_viewport_height = @min(size / 2, 24);
+        const minimum_viewport_height = @min(size.rows / 2, 24);
 
         // Calculate available space below cursor
         const available_rows = size.rows - (cursor_pos.row - 1) - 1;
@@ -126,7 +126,7 @@ pub const Viewport = struct {
         const cursor_pos = try terminal.getCursorPosition();
 
         // If cursor is'nt at row 1, no clear happened
-        if (cursor_pos != 1) {
+        if (cursor_pos.row != 1) {
             return false;
         }
 

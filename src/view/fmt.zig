@@ -70,7 +70,7 @@ fn getTruncated(bytes: i64) f64 {
 }
 
 // Formats file permissions in the style similar to 'ls' command
-pub fn mode(stat: Stat, buffer: []u8) ![]u8 {
+pub fn mode(stat: *Stat, buffer: []u8) ![]u8 {
     // User permissions (owner)
     const read_user = if (stat.hasUserReadPermission()) r else dash;
     const write_user = if (stat.hasUserWritePermission()) w else dash;
@@ -87,7 +87,7 @@ pub fn mode(stat: Stat, buffer: []u8) ![]u8 {
     const exec_other = if (stat.hasOtherExecutePermission()) x else dash;
 
     // Format the permission like "drwxr-xr-x"
-    return std.fmt.bufPrint(buffer, "{s}{s}{s}{s}{s}{s}{s}{s}{s}{s}", .{ itemType(stat), read_user, write_user, exec_user, read_group, write_group, exec_group, read_other, write_other, exec_other });
+    return std.fmt.bufPrint(buffer, "{s}{s}{s}{s}{s}{s}{s}{s}{s}{s}", .{ itemType(stat.*), read_user, write_user, exec_user, read_group, write_group, exec_group, read_other, write_other, exec_other });
 }
 
 // Determines and returns the file type indicator

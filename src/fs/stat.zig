@@ -66,7 +66,7 @@ pub const Stat = struct {
             };
         } else {
             var other_stat_buffer: libc.struct_stat = undefined;
-            if (libc.lStat(abs_path_ptr, &other_stat_buffer) != 0) {
+            if (libc.lstat(abs_path_ptr, &other_stat_buffer) != 0) {
                 return error.StatError;
             }
 
@@ -179,11 +179,11 @@ pub const Stat = struct {
     }
 
     // Get Group and User names from gid and uid
-    pub fn getUsername(self: *Self, map: owner.UserMap) ![]u8 {
+    pub fn getUsername(self: *Self, map: *owner.UserMap) ![]u8 {
         return try owner.getIdName(self.uid, map, .user);
     }
 
-    pub fn getGroupname(self: *Self, map: owner.UserMap) ![]u8 {
+    pub fn getGroupname(self: *Self, map: *owner.UserMap) ![]u8 {
         return try owner.getIdName(self.gid, map, .group);
     }
 };

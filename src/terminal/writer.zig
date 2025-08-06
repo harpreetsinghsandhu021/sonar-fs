@@ -76,7 +76,7 @@ pub const BufferedWriter = struct {
     pub fn enableBuffering(self: *Self) !void {
         self.is_buffering_enabled = true;
         if (self.sync_protocol == .csi or self.sync_protocol == .dcs) {
-            self.writeSyncStart();
+            try self.writeSyncStart();
         }
     }
 
@@ -86,7 +86,7 @@ pub const BufferedWriter = struct {
     }
 
     // Writes synchronization start sequence based on protocol
-    fn writeSyncStart(self: *Self) void {
+    fn writeSyncStart(self: *Self) !void {
         // sequence code to enable Synchronized output in terminal.
         const sequence = switch (self.sync_protocol) {
             .csi => "\x1b[?2026h", // `?` is private mode indicator.
@@ -100,7 +100,7 @@ pub const BufferedWriter = struct {
     }
 
     // Writes synchronization end sequence based on protocol
-    fn writeSyncEnd(self: *Self) void {
+    fn writeSyncEnd(self: *Self) !void {
         const sequence = switch (self.sync_protocol) {
             .csi => "\x1b[?2026l",
             .dcs => "\x1bP=2s\x1b\\",
@@ -123,11 +123,11 @@ pub const BufferedWriter = struct {
 
     // Writes data to the output
     pub fn writeAny(self: *Self, bytes: []const u8) !usize {
-        return if (self.is_buffering_enabled) {
-            try self.writeBuffered(bytes);
+        if (self.is_buffering_enabled) {
+            return try self.writeBuffered(bytes);
         } else {
-            try self.writeImmediate(bytes);
-        };
+            return try self.writeImmediate(bytes);
+        }
     }
 
     // Handles buffered writing with overflow protection
@@ -183,9 +183,9 @@ pub const BufferedWriter = struct {
         const formatted_bytes = format_stream.getWritten();
         // Write using buffered or immediate mode
         if (use_buffer) {
-            try self.writeBuffered(formatted_bytes);
+            return try self.writeBuffered(formatted_bytes);
         } else {
-            try self.writeImmediate(formatted_bytes);
+            return try self.writeImmediate(formatted_bytes);
         }
     }
 };

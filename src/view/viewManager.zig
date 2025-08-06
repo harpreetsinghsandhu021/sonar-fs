@@ -56,15 +56,15 @@ pub const ViewManager = struct {
 
         // If we`re at the start, ensure the view boundaries are correct.
         if (self.viewport_start == 0) {
-            self.correct(maxRows, iter);
+            try self.correct(maxRows, iter);
         }
 
         // The loop ensures the cursor stays visible.
         while (true) {
             if (self.cursor_pos > self.viewport_end) {
-                self.scrollViewportUp(iter);
+                try self.scrollViewportUp(iter);
             } else if (self.cursor_pos < self.viewport_start) {
-                self.scrollViewportDown(maxRows);
+                try self.scrollViewportDown(maxRows);
             } else {
                 break;
             }
@@ -74,7 +74,7 @@ pub const ViewManager = struct {
         try self.correct(maxRows, iter);
 
         // Determines if the entire view needs to be redrawn
-        self.setPrintAll(prevStart, prevEnd);
+        self.updateRedrawStatus(prevStart, prevEnd);
     }
 
     // Ensures viewport boundaries and cursor position are valid.

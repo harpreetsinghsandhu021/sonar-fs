@@ -10,7 +10,7 @@ const ConfigSource = enum { from_enviroment, from_command_line };
 
 // Reads and applies configuration from enviroment variables
 pub fn loadEnviromentConfig(app_config: *Config) !void {
-    const ENV_CONFIG_KEY = "FEX_DEFAULT_COMMAND";
+    const ENV_CONFIG_KEY = "SONAR_DEFAULT_COMMAND";
 
     const env_config_value = std.posix.getenv(ENV_CONFIG_KEY);
     if (env_config_value == null) {
@@ -25,7 +25,7 @@ pub fn loadEnviromentConfig(app_config: *Config) !void {
     _ = try ConfigurationParser(ArgumentSplitter).parseAndApply(
         app_config,
         env_args_iterator,
-        true,
+        ConfigSource.from_enviroment,
     );
 }
 
@@ -43,7 +43,7 @@ pub fn loadCommandLineConfig(app_config: *Config) !bool {
     return try ConfigurationParser(std.process.ArgIterator).parseAndApply(
         app_config,
         arg_iterator,
-        false,
+        ConfigSource.from_command_line,
     );
 }
 
@@ -155,7 +155,7 @@ fn ConfigurationParser(IteratorType: type) type {
                 return true;
             }
             if (std.mem.eql(u8, flag, "--version")) {
-                displayVersionInfo();
+                try displayVersionInfo();
                 return true;
             }
             return false;
@@ -170,7 +170,7 @@ fn ConfigurationParser(IteratorType: type) type {
 
 // Checks if the argument is a valid directory, if not, then return false
 fn isValidDirectory(arg: []const u8) bool {
-    const stat = Stat.stat(arg) catch return false;
+    var stat = Stat.stat(arg) catch return false;
     return stat.isDir();
 }
 

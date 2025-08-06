@@ -116,7 +116,7 @@ pub const Tree = struct {
         // 2. Either:
         //    - It's the first item in the group (file_entry.first) OR
         //    - Previous items at this depth had siblings (previous_has_sibling)
-        self.tree_structure.item[file_entry.depth] = !file_entry.last and (file_entry.first or previous_has_sibling);
+        self.tree_structure.items[file_entry.depth] = !file_entry.last and (file_entry.first or previous_has_sibling);
     }
 
     // Resets the tree structure for a new rendering pass.
@@ -172,9 +172,9 @@ pub const Tree = struct {
 
         // Display File permissions if enabled
         if (self.display_config.show_metadata and self.display_config.show_permissions) {
-            const file_stat = try file_entry.item.getStat();
-            const permission_string = try fmt.mode(file_stat, &self.output_buffer);
-            try display.printString(permission_string, .{ .no_style = true });
+            var file_stat = try file_entry.item.getStat();
+            const permission_string = try fmt.mode(&file_stat, &self.output_buffer);
+            try display.printString(permission_string, .{ .style_sequence = true });
         }
 
         // Display File size if enabled
@@ -196,7 +196,7 @@ pub const Tree = struct {
 
         // Add spacing after metadata if present
         if (show_prefix_info) {
-            try display.printString(" ", .{ .no_style = true });
+            try display.printString(" ", .{ .style_sequence = true });
         }
 
         // Display tree structure and file name
@@ -232,7 +232,7 @@ pub const Tree = struct {
             const file_color = try getFileColor(file_entry, false);
 
             try display.printString(icon, .{ .fg = file_color });
-            try display.printString(" ", .{ .no_style = true });
+            try display.printString(" ", .{ .style_sequence = true });
         }
 
         // 3. Display Filename with appropriate formatting
@@ -246,7 +246,7 @@ pub const Tree = struct {
             try display.printString(" <", .{ .bold = true, .fg = .magenta });
         }
 
-        try display.printString(" ", .{ .no_style = true });
+        try display.printString(" ", .{ .style_sequence = true });
     }
 
     // Gets the type of timestamp to display
@@ -276,7 +276,7 @@ pub const Tree = struct {
             else
                 " -> ";
 
-            try display.printString(arrow, .{ .no_style = true });
+            try display.printString(arrow, .{ .style_sequence = true });
             try display.printString(link_target, .{ .fg = .red });
         }
     }
@@ -350,7 +350,7 @@ pub const Tree = struct {
         // Iterate through visible items to find longest names
         for (view.viewport_start..view.viewport_end + 1) |i| {
             const file_entry = view.buffer.items[i];
-            const file_stat = try file_entry.item.getStat();
+            var file_stat = try file_entry.item.getStat();
 
             if (self.display_config.show_group) {
                 const group_name = try file_stat.getGroupname(self.group_names);

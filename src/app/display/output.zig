@@ -30,11 +30,11 @@ pub fn init(allocator: std.mem.Allocator, config: *Config) !Self {
     const writer = try allocator.create(BufferedWriter);
     const display = try allocator.create(Draw);
 
-    writer.* = BufferedWriter.init(allocator, 2048);
+    writer.* = try BufferedWriter.init(allocator, 2048);
     writer.sync_protocol = .csi;
 
-    display.* = Draw.init(allocator);
-    tree.* = Tree.init(allocator, config);
+    display.* = try Draw.init(allocator);
+    tree.* = try Tree.init(allocator, config.*);
 
     try display.hideCursor();
     try display.disableAutowrap();
@@ -69,9 +69,9 @@ pub fn deinit(self: *Self) void {
 // @param is_capturing_command: Whether we're currently in command mode
 pub fn printContents(self: *Self, start_row: u16, view: *ViewManager, is_capturing_command: bool) !void {
     // Writing to the terminal character-by-character is slow. Buffering collects everything and writes it in one fast operation, preventing flickering.
-    self.writer.enableBuffering();
+    try self.writer.enableBuffering();
     defer {
-        self.writer.flush();
+        self.writer.flush() catch {};
         self.writer.disableBuffering();
     }
 
