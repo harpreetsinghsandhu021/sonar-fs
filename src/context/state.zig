@@ -42,19 +42,19 @@ const Self = @This();
 
 pub fn init(allocator: Allocator, config: *Config) !Self {
     const viewport = try allocator.create(Viewport);
-    viewport.* = Viewport.init();
+    viewport.* = try Viewport.init();
 
     const view = try allocator.create(ViewManager);
     view.* = ViewManager.init(allocator);
 
     const output = try allocator.create(Output);
-    output.* = Output.init(allocator, config);
+    output.* = try Output.init(allocator, config);
 
     const input = try allocator.create(Input);
-    input.* = Input.init(allocator);
+    input.* = try Input.init(allocator);
 
     const manager = try allocator.create(Manager);
-    manager.* = Manager.init(allocator, config.root);
+    manager.* = try Manager.init(allocator, config.root);
 
     const charArray = std.ArrayList(u8);
 
@@ -124,7 +124,7 @@ pub fn preRun(self: *Self) !void {
 
     // LOAD ROOT DIRECTORY CHILDREN
     // This ensures the file manager is ready to display the initial directory listing
-    _ = try self.fs_manager.root.children;
+    _ = try self.fs_manager.root.getChildren();
 
     // FLAG THAT FILE LIST NEEDS TO BE REBUILT
     self.needs_file_list_rebuild = true;
@@ -144,7 +144,7 @@ pub fn postRun(self: *Self) !void {
 
     // EXECUTE EXIT COMMAND
     if (self.command_to_execute_on_exit.items.len > 0) {
-        try self.dumpStdout();
+        try self.writeShellCommandToStdout();
     }
 }
 
@@ -201,7 +201,7 @@ fn initializeIterator(self: *Self) !void {
     }
 
     const iterator = try self.allocator.create(Iterator);
-    iterator.* = self.fs_manager.iterator(self.itermode);
+    iterator.* = try self.fs_manager.iterator(self.itermode);
 
     self.iterator = iterator;
 }
@@ -373,4 +373,20 @@ pub fn getItem(self: *Self, index: usize) ?*Item {
     }
 
     return null;
+}
+
+// Writes the command stored in `self.command_to_execute_on_exit` to the process's standard output.
+// This is a mechanism by which sonar_fs communicates a command back to the calling shell (e.g to change
+// the directory with cd).
+//
+// Before writing to command_to_execute_on_exit, if sonar_fs is not in fullscreen mode, it will clear the
+// TUI elements from the screen to leave a clean prompt for the shell. In fullscreen mode, the alternate
+// screen buffer is simply discarded, so no manual clearing is needed.
+pub fn writeShellCommandToStdout(self: *Self) !void {
+    if (!self.use_fullscreen) {
+        self.terminal_output.writer.disableBuffering();
+        try self.terminal_output.display.clearLinesBelow(self.display_viewport.viewport_start);
+    }
+
+    _ = try std.io.getStdOut().writer().write(self.command_to_execute_on_exit.items);
 }

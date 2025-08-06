@@ -192,6 +192,7 @@ pub const InputHandler = struct {
             .input_buffer = undefined, // Will be initialized when first used
             .search_capture = search_capture,
             .command_capture = command_capture,
+            .allocator = allocator,
         };
     }
 

@@ -13,7 +13,7 @@ const VerticalLineConfig = struct { column: usize = 0, row: usize = 0, length: u
 const HorizontalLineConfig = struct { column: usize = 0, row: usize = 0, length: usize = 0, line_char: []const u8 = "\u{2500}", style_sequence: []const u8 = "" };
 
 // Config for string positioning and styling
-const StringConfig = struct {
+pub const StringConfig = struct {
     column: usize = 0,
     row: usize = 0,
     style_sequence: []const u8 = "",
@@ -264,6 +264,6 @@ pub const Draw = struct {
 
     // Clears the line underneath the cursor.
     pub fn clearLine(self: *Self) !void {
-        _ = self.writer.write("\x1b[K");
+        _ = try self.writer.writeAny("\x1b[K");
     }
 };

@@ -47,7 +47,7 @@ pub fn getIdName(id: u32, map: *UserMap, idType: IDType) ![]u8 {
 
     switch (idType) {
         .group => setIdName(libc.getgrgid(id).*.gr_name, owner),
-        .user => setIdName(libc.getpwuid(id), owner),
+        .user => setIdName(libc.getpwuid(id).*.pw_name, owner),
     }
 
     return owner.name();

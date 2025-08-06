@@ -72,7 +72,7 @@ pub const Iterator = struct {
         const last_item = self.stack.pop();
         // If an item was popped, grow the stack with its children
         if (last_item) |item| {
-            try self.insertIntoStack(item);
+            self.insertIntoStack(item) catch {};
         }
 
         return last_item;
