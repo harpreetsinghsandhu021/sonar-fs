@@ -11,7 +11,7 @@
 
 A fast, modern, and highly-configurable TUI file explorer for your terminal, written in Zig.
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/your-username/sonar-fs/actions)
+
 
 > **Note**: This project is under active development. Features and keybindings may change.
 
