@@ -13,7 +13,7 @@
 
 A fast, modern, and highly-configurable TUI file explorer for your terminal, written in Zig.
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/your-username/sonar-fs/actions)
+
 
 > **Note**: This project is under active development. Features and keybindings may change.
 
@@ -81,47 +81,6 @@ You can run `sonar-fs` by pointing it to a specific directory:
 ```sh
 ./zig-out/bin/sonar-fs /path/to/your/project
 ```
-
-### Shell Integration
-
-To enable changing the directory of your shell after `sonar-fs` exits, you need to use a wrapper function. Add the following function to your shell's configuration file (e.g., `~/.bashrc`, `~/.zshrc`).
-
-```bash
-# sonar-fs shell integration
-sfs() {
-    # Create a temporary file to store the output command from sonar-fs
-    local output_file
-    output_file="$(mktemp)"
-
-    # Ensure the temp file is cleaned up on exit
-    trap 'rm -f "$output_file"' RETURN
-
-    # Run sonar-fs, redirecting its command output to the temp file.
-    # Replace ./zig-out/bin/sonar-fs with the actual path to your binary.
-    ./zig-out/bin/sonar-fs "$@" > "$output_file"
-
-    # If sonar-fs wrote a command to the output file, execute it.
-    if [ -s "$output_file" ]; then
-        # Read the command and arguments from the file.
-        # sonar-fs outputs one token per line.
-        local cmd
-        cmd=$(cat "$output_file")
-
-        # Check if the command is 'cd' for special handling in the current shell.
-        if [ "$(echo "$cmd" | head -n 1)" = "cd" ]; then
-            local target_dir
-            target_dir=$(echo "$cmd" | sed -n '2p')
-            cd -- "$target_dir"
-        else
-            # For any other command, use xargs to build and execute it.
-            # This is safe because xargs treats each line as a separate argument.
-            echo "$cmd" | xargs
-        fi
-    fi
-}
-```
-
-After adding this, restart your shell or source the config file (`source ~/.zshrc`), and you can use `sfs` as your new command.
 
 ## Keybindings
 
