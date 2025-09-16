@@ -19,10 +19,10 @@ pub fn getIcon(entry: *Entry) ![]const u8 {
         return icon;
     }
 
-    const file_stat = try item.getStat();
+    var file_stat = try item.getStat();
     if (file_stat.isDir()) {
         if (item.hasChildren()) {
-            return icons.folder_span;
+            return icons.folder_open;
         } else {
             return icons.folder;
         }
@@ -70,7 +70,7 @@ fn findIconForExtension(ext: []const u8) ?[]const u8 {
     if (isDocFile(ext)) return getDocIcon(ext);
 
     // Media files
-    if (isMediaFile(ext)) return getMediaIcon(ext);
+    // if (isMediaFile(ext)) return getMediaIcon(ext);
 
     // Beam
     if (isBeamFile(ext)) return getBeamIcon(ext);

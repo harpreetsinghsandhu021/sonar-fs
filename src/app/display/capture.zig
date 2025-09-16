@@ -50,7 +50,7 @@ pub fn capture(self: *Self, str: []const u8) !void {
         return;
     }
 
-    _ = try self.buffer.append(str);
+    _ = try self.buffer.appendSlice(str);
 }
 
 pub fn string(self: *Self) []const u8 {

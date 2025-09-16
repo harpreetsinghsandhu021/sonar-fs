@@ -354,7 +354,7 @@ pub fn getItemUnderCursor(self: *Self) *Item {
 // This Function gets the file entry that the cursor is currently pointing to.
 // This assumes the cursor is always at a valid position.
 pub fn getEntryUnderCursor(self: *Self) *Entry {
-    return self.view.buffer[self.view.cursor_pos];
+    return self.view.buffer.items[self.view.cursor_pos];
 }
 
 // This Function gets the file entry at the given index.

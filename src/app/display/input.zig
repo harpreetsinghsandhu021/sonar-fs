@@ -242,7 +242,7 @@ pub const InputHandler = struct {
     // escape have special feelings.
     fn handleSearchInput(self: *Self) !AppAction {
         // Try to read the next keystroke
-        const input_slice = self.rawInput(self.input_buffer) catch |err| switch (err) {
+        const input_slice = self.readRawInput(&self.input_buffer) catch |err| switch (err) {
             error.RecievedCursorPosition => return .no_action,
             error.EndOfStream => return .no_action,
             else => return err,
@@ -272,7 +272,7 @@ pub const InputHandler = struct {
     // Commands are executed rather than searched.
     fn handleCommandInput(self: *Self) !AppAction {
         // Try to read the next keystroke
-        const input_slice = self.rawInput(self.input_buffer) catch |err| switch (err) {
+        const input_slice = self.readRawInput(&self.input_buffer) catch |err| switch (err) {
             error.RecievedCursorPosition => return .no_action,
             error.EndOfStream => return .no_action,
             else => return err,
@@ -298,7 +298,7 @@ pub const InputHandler = struct {
     // that might need more characters to complete.
     fn processNormalInput(self: *Self) !AppAction {
         // Read the initial input
-        var current_length = try self.stdin_reader.read(self.input_buffer);
+        var current_length = try self.stdin_reader.read(&self.input_buffer);
         var current_slice = self.input_buffer[0..current_length];
 
         // Check if this is a cursor position response (ignore if so)

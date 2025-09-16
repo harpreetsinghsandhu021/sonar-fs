@@ -159,7 +159,7 @@ pub const Tree = struct {
     fn displayFileLine(self: *Self, file_index: usize, view: *const ViewManager, display: *Draw) !void {
         // Clear existing line content
         try display.clearLine();
-
+        const metadataWidths: MetadataWidths = .{ .group_width = 0, .user_width = 0 };
         var file_entry = view.buffer.items[file_index];
 
         // Check if we should show metadata (permissions, size, etc.)
@@ -174,29 +174,29 @@ pub const Tree = struct {
         if (self.display_config.show_metadata and self.display_config.show_permissions) {
             var file_stat = try file_entry.item.getStat();
             const permission_string = try fmt.mode(&file_stat, &self.output_buffer);
-            try display.printString(permission_string, .{ .style_sequence = true });
+            try display.printStyled(permission_string, .{ .no_style = true });
         }
 
         // Display File size if enabled
         if (self.display_config.show_metadata and self.display_config.show_size) {
             const file_stat = try file_entry.item.getStat();
             const size_string = try fmt.size(file_stat, &self.output_buffer);
-            try display.printString(size_string, .{ .fg = .cyan });
+            try display.printStyled(size_string, .{ .fg = .cyan });
         }
 
         // Display ownership information
-        try self.displayOwnershipInfo(file_entry, display, MetadataWidths);
+        try self.displayOwnershipInfo(file_entry, display, metadataWidths);
 
         // Show timstamp if enabled
         if (self.getTimeDisplayType()) |time_type| {
             const file_stat = try file_entry.item.getStat();
             const time_string = fmt.time(file_stat, time_type, &self.output_buffer);
-            try display.printString(time_string, .{ .fg = .yellow });
+            try display.printStyled(time_string, .{ .fg = .yellow });
         }
 
         // Add spacing after metadata if present
         if (show_prefix_info) {
-            try display.printString(" ", .{ .style_sequence = true });
+            try display.printStyledLine(" ", .{ .no_style = true });
         }
 
         // Display tree structure and file name
@@ -204,18 +204,18 @@ pub const Tree = struct {
     }
 
     // Displays user and group ownership information
-    fn displayOwnershipInfo(self: *Self, file_entry: *Entry, display: *Draw, metadata_widths: *const MetadataWidths) !void {
+    fn displayOwnershipInfo(self: *Self, file_entry: *Entry, display: *Draw, metadata_widths: anytype) !void {
         if (self.display_config.show_metadata) {
             if (self.display_config.show_user) {
                 const file_stat = try file_entry.item.getStat();
                 const user_name = string_utils.rightPadding(try file_stat.getUsername(self.user_names), metadata_widths.user_width + 1, ' ', &self.output_buffer);
-                try display.printString(user_name, .{ .fg = .blue });
+                try display.printStyled(user_name, .{ .fg = .blue });
             }
 
             if (self.display_config.show_group) {
                 const file_stat = try file_entry.item.getStat();
                 const group_name = string_utils.rightPadding(try file_stat.getGroupname(self.group_names), metadata_widths.group_width + 1, ' ', &self.output_buffer);
-                try display.printString(group_name, .{ .fg = .green });
+                try display.printStyled(group_name, .{ .fg = .green });
             }
         }
     }
@@ -223,16 +223,16 @@ pub const Tree = struct {
     // Displays the tree structure, file name, and additional file information
     fn displayTreeAndFileName(self: *Self, file_entry: *Entry, file_index: usize, view: *const ViewManager, display: *Draw) !void {
         // 1. Display Branch Tree structure
-        const branch_chars = self.generateBranchConnector(file_entry, &self.output_buffer);
-        try display.printString(branch_chars, .{ .faint = true });
+        const branch_chars = try self.generateBranchConnector(file_entry, &self.output_buffer);
+        try display.printStyled(branch_chars, .{ .faint = true });
 
         // 2. Display File icon if enabled
         if (self.display_config.show_icons) {
             const icon = try iconManager.getIcon(file_entry);
             const file_color = try getFileColor(file_entry, false);
 
-            try display.printString(icon, .{ .fg = file_color });
-            try display.printString(" ", .{ .style_sequence = true });
+            try display.printStyled(icon, .{ .fg = file_color });
+            try display.printStyled(" ", .{ .no_style = true });
         }
 
         // 3. Display Filename with appropriate formatting
@@ -243,10 +243,10 @@ pub const Tree = struct {
 
         // 5. Display cursor indicator if this is selected file
         if (view.cursor_pos == file_index) {
-            try display.printString(" <", .{ .bold = true, .fg = .magenta });
+            try display.printStyled(" <", .{ .bold = true, .fg = .magenta });
         }
 
-        try display.printString(" ", .{ .style_sequence = true });
+        try display.printStyled(" ", .{ .no_style = true });
     }
 
     // Gets the type of timestamp to display
@@ -262,7 +262,7 @@ pub const Tree = struct {
     fn displayFilename(file_entry: *Entry, file_index: usize, view: *const ViewManager, display: *Draw) !void {
         const file_name = file_entry.item.getBasename();
         const file_color = try getFileColor(file_entry, view.cursor_pos == file_index);
-        try display.printString(file_name, .{ .fg = file_color, .underline = file_entry.selected });
+        try display.printStyled(file_name, .{ .fg = file_color, .underline = file_entry.selected });
     }
 
     // Displays symlink target if file is a symbolic link
@@ -276,8 +276,8 @@ pub const Tree = struct {
             else
                 " -> ";
 
-            try display.printString(arrow, .{ .style_sequence = true });
-            try display.printString(link_target, .{ .fg = .red });
+            try display.printStyled(arrow, .{ .no_style = true });
+            try display.printStyled(link_target, .{ .fg = .red });
         }
     }
 
@@ -285,7 +285,7 @@ pub const Tree = struct {
     fn getFileColor(file_entry: *Entry, is_selected: bool) !terminal_styles.Color {
         if (is_selected) return .magenta;
 
-        const file_stat = try file_entry.item.getStat();
+        var file_stat = try file_entry.item.getStat();
 
         if (file_stat.isDir()) return .blue;
         if (file_stat.isLinkFile()) return .cyan;

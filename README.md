@@ -1,13 +1,15 @@
 # Sonar-fs
 
 ```
-███████╗ ██████╗ ███╗   ██╗ █████╗ ██████╗ 
+███████╗ ██████╗ ███╗   ██╗ █████╗ ██████╗
 ██╔════╝██╔═══██╗████╗  ██║██╔══██╗██╔══██╗
 ███████╗██║   ██║██╔██╗ ██║███████║██████╔╝
 ╚════██║██║   ██║██║╚██╗██║██╔══██║██╔══██╗
 ███████║╚██████╔╝██║ ╚████║██║  ██║██║  ██║
 ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝
 ```
+
+![Sonar](./ss.jpg)
 
 A fast, modern, and highly-configurable TUI file explorer for your terminal, written in Zig.
 
@@ -19,7 +21,7 @@ A fast, modern, and highly-configurable TUI file explorer for your terminal, wri
 
 ## Visuals
 
-*(It is highly recommended to add a screenshot or a GIF of `sonar-fs` in action here!)*
+_(It is highly recommended to add a screenshot or a GIF of `sonar-fs` in action here!)_
 
 ## Features
 
@@ -54,12 +56,14 @@ A fast, modern, and highly-configurable TUI file explorer for your terminal, wri
 ## Installation
 
 1.  **Clone the repository:**
+
     ```sh
     git clone https://github.com/your-username/sonar-fs.git
     cd sonar-fs
     ```
 
 2.  **Build the project:**
+
     ```sh
     zig build
     ```
@@ -88,7 +92,7 @@ sfs() {
     # Create a temporary file to store the output command from sonar-fs
     local output_file
     output_file="$(mktemp)"
-    
+
     # Ensure the temp file is cleaned up on exit
     trap 'rm -f "$output_file"' RETURN
 
@@ -123,48 +127,48 @@ After adding this, restart your shell or source the config file (`source ~/.zshr
 
 ### Navigation
 
-| Key(s) | Action |
-| :--- | :--- |
-| `k`, `Up` | Move cursor up |
-| `j`, `Down` | Move cursor down |
-| `h`, `Left` | Navigate to parent / Collapse directory |
-| `l`, `Right` | Navigate to child / Expand directory |
-| `Enter` | Toggle directory or open file |
-| `gg` | Go to top |
-| `G` | Go to bottom |
-| `{` | Move to previous sibling/fold |
-| `}` | Move to next sibling/fold |
+| Key(s)       | Action                                  |
+| :----------- | :-------------------------------------- |
+| `k`, `Up`    | Move cursor up                          |
+| `j`, `Down`  | Move cursor down                        |
+| `h`, `Left`  | Navigate to parent / Collapse directory |
+| `l`, `Right` | Navigate to child / Expand directory    |
+| `Enter`      | Toggle directory or open file           |
+| `gg`         | Go to top                               |
+| `G`          | Go to bottom                            |
+| `{`          | Move to previous sibling/fold           |
+| `}`          | Move to next sibling/fold               |
 
 ### File & Directory Operations
 
-| Key(s) | Action |
-| :--- | :--- |
-| `o` | Open item with default application |
-| `R` | Set selected directory as new root |
-| `cd` | (In command mode) Output `cd` command for shell integration |
-| `E` | Expand all directories |
-| `C` | Collapse all directories |
-| `1` - `9` | Expand directories to a specific depth |
-| `/` | Start search mode |
-| `:` | Start command mode |
-| `<Tab>` | Toggle selection for a command |
-| `q`, `Ctrl-C` | Quit |
+| Key(s)        | Action                                                      |
+| :------------ | :---------------------------------------------------------- |
+| `o`           | Open item with default application                          |
+| `R`           | Set selected directory as new root                          |
+| `cd`          | (In command mode) Output `cd` command for shell integration |
+| `E`           | Expand all directories                                      |
+| `C`           | Collapse all directories                                    |
+| `1` - `9`     | Expand directories to a specific depth                      |
+| `/`           | Start search mode                                           |
+| `:`           | Start command mode                                          |
+| `<Tab>`       | Toggle selection for a command                              |
+| `q`, `Ctrl-C` | Quit                                                        |
 
 ### Display Toggles
 
-| Key(s) | Action |
-| :--- | :--- |
-| `I` | Toggle the entire information panel |
-| `i` | Toggle icons |
-| `s` | Toggle file sizes |
-| `p` | Toggle permissions |
-| `t` | Toggle timestamps |
-| `tl` | Toggle symbolic link targets |
-| `g` | Toggle group column |
-| `u` | Toggle user column |
-| `tm` | Show modification time |
-| `ta` | Show access time |
-| `tc` | Show change time |
+| Key(s) | Action                              |
+| :----- | :---------------------------------- |
+| `I`    | Toggle the entire information panel |
+| `i`    | Toggle icons                        |
+| `s`    | Toggle file sizes                   |
+| `p`    | Toggle permissions                  |
+| `t`    | Toggle timestamps                   |
+| `tl`   | Toggle symbolic link targets        |
+| `g`    | Toggle group column                 |
+| `u`    | Toggle user column                  |
+| `tm`   | Show modification time              |
+| `ta`   | Show access time                    |
+| `tc`   | Show change time                    |
 
 ## Configuration
 
@@ -172,19 +176,19 @@ You can configure `sonar-fs` using command-line flags or an environment variable
 
 ### Command-Line Flags
 
-| Flag | Description | Default |
-| :--- | :--- | :--- |
-| `[path]` | The root directory to open. | `.` |
-| `--[no-]icons` | Show/hide file type icons. | `true` |
-| `--[no-]size` | Show/hide file sizes. | `true` |
-| `--[no-]permissions` | Show/hide file permissions. | `true` |
-| `--[no-]timestamp` | Show/hide timestamps. | `true` |
-| `--[no-]symlinks` | Show/hide symbolic link targets. | `true` |
-| `--[no-]group` | Show/hide group column. | `true` |
-| `--[no-]user` | Show/hide user column. | `true` |
-| `--[no-]fullscreen` | Run in fullscreen alternate buffer. | `false` |
-| `--help` | Show help message. | |
-| `--version` | Show version information. | |
+| Flag                 | Description                         | Default |
+| :------------------- | :---------------------------------- | :------ |
+| `[path]`             | The root directory to open.         | `.`     |
+| `--[no-]icons`       | Show/hide file type icons.          | `true`  |
+| `--[no-]size`        | Show/hide file sizes.               | `true`  |
+| `--[no-]permissions` | Show/hide file permissions.         | `true`  |
+| `--[no-]timestamp`   | Show/hide timestamps.               | `true`  |
+| `--[no-]symlinks`    | Show/hide symbolic link targets.    | `true`  |
+| `--[no-]group`       | Show/hide group column.             | `true`  |
+| `--[no-]user`        | Show/hide user column.              | `true`  |
+| `--[no-]fullscreen`  | Run in fullscreen alternate buffer. | `false` |
+| `--help`             | Show help message.                  |         |
+| `--version`          | Show version information.           |         |
 
 ### Environment Variable
 

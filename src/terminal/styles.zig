@@ -142,4 +142,11 @@ pub fn style(buffer: []u8, config: StyleConfig) ![]u8 {
         slice = try std.fmt.bufPrint(buffer[index..], "{d};", .{n});
         index += slice.len;
     }
+
+    if (index == "\x1b[".len) {
+        return buffer[0..0];
+    }
+
+    _ = try std.fmt.bufPrint(buffer[index - 1 ..], "m", .{});
+    return buffer[0..index];
 }
