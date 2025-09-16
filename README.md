@@ -49,7 +49,7 @@ A fast, modern, and highly-configurable TUI file explorer for your terminal, wri
 
 - **Zig Compiler**: A recent version of the Zig compiler (e.g., 0.11.0+).
 - **Nerd Font**: Required to display file type icons correctly. You can find them at nerdfonts.com.
-- **Unix-like OS**: Tested on macOS and Linux.
+- **Unix-like OS**: Tested on macOS only.
 
 ## Installation
 
