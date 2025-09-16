@@ -9,8 +9,6 @@
 ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝
 ```
 
-![Sonar](./ss.jpg)
-
 A fast, modern, and highly-configurable TUI file explorer for your terminal, written in Zig.
 
 
@@ -21,7 +19,7 @@ A fast, modern, and highly-configurable TUI file explorer for your terminal, wri
 
 ## Visuals
 
-_(It is highly recommended to add a screenshot or a GIF of `sonar-fs` in action here!)_
+![Sonar](./ss.jpg)
 
 ## Features
 
