@@ -86,9 +86,9 @@ pub fn printContents(self: *Self, start_row: u16, view: *ViewManager, is_capturi
 // Displays real-time user input at the bottom of the screen when the user is typing a search query or command.
 // Think of it as "display prompt".
 pub fn printCaptureString(self: *Self, view: *ViewManager, viewport: *Viewport, capture: *Capture) !void {
-    self.writer.enableBuffering();
+    try self.writer.enableBuffering();
     defer {
-        self.writer.flush();
+        self.writer.flush() catch {};
         self.writer.disableBuffering();
     }
 
@@ -106,6 +106,6 @@ pub fn printCaptureString(self: *Self, view: *ViewManager, viewport: *Viewport, 
     // Choose the sigil ("/" for search, ":" for command) based on capture type
     const sigil = if (capture.ctype == .search) "/" else ":";
 
-    try self.display.printString(sigil, .{ .fg = .black, .bg = .cyan });
-    try self.display.printString(captured, .{ .fg = .black, .bg = .yellow });
+    try self.display.printStyled(sigil, .{ .fg = .black, .bg = .cyan });
+    try self.display.printStyled(captured, .{ .fg = .black, .bg = .yellow });
 }

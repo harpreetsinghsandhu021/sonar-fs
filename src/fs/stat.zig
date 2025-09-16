@@ -179,11 +179,11 @@ pub const Stat = struct {
     }
 
     // Get Group and User names from gid and uid
-    pub fn getUsername(self: *Self, map: *owner.UserMap) ![]u8 {
+    pub fn getUsername(self: *const Self, map: *owner.UserMap) ![]u8 {
         return try owner.getIdName(self.uid, map, .user);
     }
 
-    pub fn getGroupname(self: *Self, map: *owner.UserMap) ![]u8 {
+    pub fn getGroupname(self: *const Self, map: *owner.UserMap) ![]u8 {
         return try owner.getIdName(self.gid, map, .group);
     }
 };

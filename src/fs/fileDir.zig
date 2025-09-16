@@ -96,7 +96,7 @@ pub const FileDir = struct {
         }
 
         if (self.getDirectoryPathname()) |parent_path| {
-            self.parent = Self.init(self.allocator, parent_path);
+            self.parent = try Self.init(self.allocator, parent_path);
             try self.setChildren();
             return self.parent.?;
         }
@@ -108,7 +108,7 @@ pub const FileDir = struct {
     //
     // When a new item is created, it needs to be added to the parent's children list. This method is called by getParent()
     // method to update the parent's children after the parent has been initialized.
-    pub fn setChildren(self: *Self) void {
+    pub fn setChildren(self: *Self) !void {
         if (self.parent == null) return;
 
         var parent = self.parent.?;
@@ -119,7 +119,7 @@ pub const FileDir = struct {
 
             // Check if current item's absolute path matches existing child's absolute path. This prevents duplicate children in the
             // parent's children list which could lead to incorrect behavior and potential memory leaks.
-            if (self.getAbsolutePath() == child.getAbsolutePath() and std.mem.eql(u8, &self.path_buffer, &child.path_buffer)) {
+            if (self.getAbsolutePath().len == child.getAbsolutePath().len and std.mem.eql(u8, &self.path_buffer, &child.path_buffer)) {
                 // Replace existing child with current item and destroy old child.
                 children.items[i] = self;
                 self.allocator.destroy(child);
@@ -184,7 +184,11 @@ pub const FileDir = struct {
     pub fn getChildIndex(self: *Self, child: *Self) !?usize {
         if (self.children == null) return null;
 
-        return std.mem.indexOf(*Self, self.children.?.items, child);
+        const children = self.children.?.items;
+        // Create a slice containing just the child pointer
+        const needle = &[_]*Self{child};
+
+        return std.mem.indexOf(*Self, children, needle);
     }
 
     // Recursively frees all the children of an item, expect for a specified child.

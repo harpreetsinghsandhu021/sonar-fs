@@ -51,6 +51,9 @@ pub const Manager = struct {
         if (index == null) {
             self.root.deinit();
         }
+
+        self.root = new_root;
+        return self.root;
     }
 
     // This function moves down to a specific child directory.

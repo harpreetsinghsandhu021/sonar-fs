@@ -184,12 +184,41 @@ pub const Draw = struct {
 
     // Prints a string at a specified position on the terminal. This method allows for optional styling of the string.
     // @returns error if the write operation fails.
-    pub fn printString(self: *Self, str: []const u8, config: styles.StyleConfig) !void {
+    pub fn printString(self: *Self, str: []const u8, config: StringConfig) !void {
         if (config.style_sequence.len > 0) {
             _ = try self.writer.print("\x1b[{d};{d}H{s}{s}\x1b[m", .{ config.row, config.column, config.style_sequence, str });
         } else {
             _ = try self.writer.print("\x1b[{d};{d}H{s}", .{ config.row, config.column, str });
         }
+    }
+
+    // Prints a string to the writer with the specified styling, without a trailing newline.
+    //
+    // This Function uses `StyleConfig` to generate the necessary ANSI escape codes for text styling (e.g color, bold, underline).
+    // The styling is applied to the given string, and then reset to default afterwards.
+    pub fn printStyled(self: *Self, string: []const u8, config: styles.StyleConfig) !void {
+        if (config.no_style) {
+            _ = try self.writer.writeAny(string);
+            return;
+        }
+
+        var sbuf: [2048]u8 = undefined;
+        const style = try styles.style(&sbuf, config);
+        _ = try self.writer.print("\x1b[{s}{s}\x1b[m", .{ style, string });
+    }
+
+    // Prints a string to the writer with the specified styling, followed by a newline.
+    //
+    // This Function is a convinience wrapper around `printStyled` that appends a newline character to the output.
+    pub fn printStyledLine(self: *Self, string: []const u8, config: styles.StyleConfig) !void {
+        if (config.no_style) {
+            _ = try self.writer.print("{s}\n", .{string});
+            return;
+        }
+
+        var sbuf: [2048]u8 = undefined;
+        const style = try styles.style(&sbuf, config);
+        _ = try self.writer.print("{s}{s}\x1b[m\n", .{ style, string });
     }
 
     // Moves the cursor to a specified position on the terminal.

@@ -36,7 +36,7 @@ pub fn gotoBottom(state: *State) void {
     // Keep loading items from iterator until we reach the end.
     // This ensures we have all the items loaded before we reach the end.
     while (state.iterator.?.next()) |current_item| {
-        state.view.buffer.append(current_item);
+        state.view.buffer.append(current_item) catch {};
     }
 
     state.view.cursor_pos = state.view.buffer.items.len - 1;
@@ -49,7 +49,8 @@ pub fn navigateToParentItem(state: *State) !void {
     const current_item = state.getItemUnderCursor();
 
     // Check if the current item has a parent in the structure
-    if (current_item.hasParent()) |parent_item| {
+    if (current_item.hasParent()) {
+        const parent_item = try current_item.getParent();
         // Try to find the parent's position in the current view buffer
         state.view.cursor_pos = state.getItemIndex(parent_item) catch |err| switch (err) {
             error.NotFound => state.view.cursor_pos,
